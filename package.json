@@ -1,0 +1,27 @@
+{
+  "name": "aangan-enquiry-desk",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "npm --workspace web run build",
+    "start": "npm --workspace server start",
+    "dev:server": "npm --workspace server run dev",
+    "dev:web": "npm --workspace web run dev",
+    "test": "npm --workspace server test",
+    "seed": "npm --workspace server run seed",
+    "agent:sync": "npm --workspace server run agent:sync",
+    "simulate": "npm --workspace server run simulate --",
+    "google:auth": "npm --workspace server run google:auth",
+    "telegram:setup": "npm --workspace server run telegram:setup",
+    "check": "npm --workspace server run check",
+    "vercel:env": "npm --workspace server run vercel:env",
+    "deploy": "npm run vercel:env && npx -y vercel@latest deploy --prod"
+  }
+}
