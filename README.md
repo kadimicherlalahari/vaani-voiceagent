@@ -27,7 +27,7 @@ Studio number ──(no answer after ~30 s / busy / after hours)──▶ Vaani 
   calendar invite (Google, optional) + Telegram handoff note [Accept] [Can't take it]
      │                                    └─ reassigns to the next designer
   15 min after the consultation ends → Telegram: "Did it happen?"
-     ├─ Yes → designer types notes → Claude summary (scope, budget discussed, next steps, likelihood)
+     ├─ Yes → designer types notes → Gemini summary (scope, budget discussed, next steps, likelihood)
      │        → [Proposal next] [Won] [Not proceeding]
      └─ No-show / designer missed / rescheduled → "What happened?" → reason stored
 ```
@@ -85,7 +85,7 @@ Then in Vaani → Settings → Webhooks add `https://<prod-url>/webhooks/vaani?k
 | Telegram | designer handoff, check-ins, escalations | `TELEGRAM_BOT_TOKEN` (@BotFather), `TELEGRAM_WEBHOOK_SECRET` (auto) |
 | Google Calendar | real availability + invites | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` (`npm run google:auth`) |
 | HubSpot | founder pipeline view | `HUBSPOT_TOKEN` (private app: contacts + deals read/write) |
-| Claude | structured consultation summaries from designer notes | `ANTHROPIC_API_KEY` |
+| Gemini (Flash, free tier) | structured consultation summaries from designer notes | `GEMINI_API_KEY`, `GEMINI_MODEL` (optional, defaults to `gemini-3.8-flash`) |
 | — | cron | `CRON_SECRET` |
 
 ## Layout
@@ -99,7 +99,7 @@ server/src
   scheduling/calendar.ts slots from working hours + bookings, Google free/busy + invites
   notify/                Telegram send/poll + bot conversation
   crm/hubspot.ts         contact + deal sync
-  ai/summarise.ts        consultation notes → structured summary (Claude)
+  ai/summarise.ts        consultation notes → structured summary (Gemini)
   jobs.ts                meeting check-ins, accept SLA nudges, overdue escalations, daily prompt date
   api/routes.ts          dashboard API (overview metrics, calls, leads, escalations, designers)
   tools/routes.ts        optional mid-call tools (date, service area, budget fit, slots)
