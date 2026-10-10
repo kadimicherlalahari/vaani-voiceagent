@@ -34,23 +34,52 @@ Studio number ──(no answer after ~30 s / busy / after hours)──▶ Vaani 
 
 Every step is written to the lead's timeline, shown on the dashboard, and (optionally) synced to HubSpot.
 
+## Components map
+
+How each part of the app interacts, from the caller's trigger through context, processing and AI to every output (dashboard, calendar, email, CRM, Telegram), plus the background cron jobs:
+
+![Components map: how the Enquiry Desk's parts interact](public/photos/components_map.jpeg)
+
 ## See it working
 
-The studio head links their Telegram chat with `/start STUDIOHEAD`. An existing-client complaint (T09, replayed with `npm run simulate`) then arrives as an escalation with the 15-minute callback deadline and one-tap **I'm calling now** / **Resolved** buttons:
+**Live dashboard:** https://aangan-enquiry-desk-beta.vercel.app/
 
-![Telegram escalation for an existing-client complaint](public/photos/image.png)
+![Aangan Enquiry Desk home page](public/photos/Aangan%20Home%20page.png)
+
+The Overview page shows how the phone line is doing: calls answered (including out-of-hours calls the front desk would have missed), leads qualified for a designer, call → designer handoff time, the funnel from call to signed project, and why enquiries were declined.
+
+### Example leads (with call recordings)
+
+| Lead                                                             | Outcome                            | Call recording                                                                                                                                                                                                                                                                                                              |
+| ---------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Lead #23](https://aangan-enquiry-desk-beta.vercel.app/leads/23) | ✅ Qualified, handed to a designer | [Listen](https://app.vaanivoice.ai/api/stream/webrtc-1791654838-979a9dbe?token=d2VicnRjLTE3OTE2NTQ4MzgtOTc5YTlkYmV8YmRkYjYxYmItOTJhYS00YjU0LWJmNDUtOTZlM2Y3M2VmN2RlfGM1NWNjY2FhLWMxNmEtNGViYS05OTIwLTZkNzAxOGEyYTE3OHwxNzk5NDMwOTcyfDVhZTJlMjdiOGQ1ZDQwMDdjYTBkNzc4MmEzZmY4ZWM3YzQyYTYxNGVkNjczMTU5NDU4OWYwZDk3NjEzNjVjYWM) |
+| [Lead #22](https://aangan-enquiry-desk-beta.vercel.app/leads/22) | ❌ Declined (not a fit)            | [Listen](https://app.vaanivoice.ai/api/stream/webrtc-1791653107-be1aecc5?token=d2VicnRjLTE3OTE2NTMxMDctYmUxYWVjYzV8YmRkYjYxYmItOTJhYS00YjU0LWJmNDUtOTZlM2Y3M2VmN2RlfGM1NWNjY2FhLWMxNmEtNGViYS05OTIwLTZkNzAxOGEyYTE3OHwxNzk5NDI5MjEyfDE1OTAyMDk1NGRlZDQ2MGM3NWExODBkYWE4NzA0M2VjMDAyYjgwMWYzNmI2MDk2ODgzMzEwZjBlNDkyZjgzNmQ) |
+
+Each lead page shows the rubric result per criterion with the reason, the extracted fields, and the full timeline.
+
+### Telegram notifications
+
+The studio head links their Telegram chat with `/start STUDIOHEAD` and from then on receives escalations and studio alerts. Below, an existing-client complaint (T09, replayed with `npm run simulate`) arrives with the promised 15-minute callback time and one-tap **I'm calling now** / **Resolved** buttons. When the callback deadline passes without a resolution, the bot re-alerts with an **OVERDUE** message every ~15 minutes until someone taps **Resolved**. It also flags leads that still need one more answer (e.g. location, timeline or decision-maker not captured) so a human can follow up:
+
+![Telegram escalation and alerts for the studio head](public/photos/TelegramNotifications.png)
+
+### Automatic email to the caller
+
+Booking confirmations are emailed to the client and the designer automatically, with no manual step. In this test call the caller intentionally gave an incorrect email address, so the message bounced, which shows the tool really sent it:
+
+![Bounce notice for the auto-sent email to an intentionally incorrect address](public/photos/EmailBlocker.png)
 
 ## Decisions (and why)
 
-| Decision | Why |
-|---|---|
-| **No prices on the call**, ever — one fixed line from `pricing.md` | Nikhil asked for per-sq-ft quotes; `pricing.md` forbids any number. This is the cut. A `pricing_leak` check runs on every call and shows on the dashboard. |
-| **Rubric in code, not in the LLM** (`server/src/rules/`) | Deterministic and explainable: each lead shows pass/fail/unclear per criterion with the reason. Tested against the September enquiries (`npm test`): it reaches the studio's own decision on all 19 qualifiable phone calls, plus 7 WhatsApp/web-form edge cases. |
-| **The agent never asks about budget** | `qualified.md`: "Don't probe." A volunteered budget is checked internally against the lowest pricing tier (×0.6); only a clear miss (T10: ₹1–1.5 L for kitchen + bedroom) is flagged. |
-| **Telegram for the handoff** (over email) | Designers are on site all day; the 1-hour, 4× conversion window needs a push notification, not an inbox. Buttons make Accept / Met / No-show a single tap, which is what makes attendance tracking possible at all. The calendar invite still goes by email. |
-| **Booking happens after the call** (mid-call slot tools optional) | Works with any Vaani plan and needs no low-latency public endpoint. The agent collects preferred days/times; the server books the earliest matching designer slot within seconds. Add the `/tools/*` cURL tools in Vaani to offer exact slots live. |
-| **Own SQLite DB as source of truth; HubSpot is a one-way sync** | The ops data Nikhil asked for (call cost, speed to designer, no-show reasons) doesn't fit HubSpot's free objects. HubSpot gets contacts and deals for the pipeline view. |
-| **Outbound callbacks parked** | Scope is incoming calls. Dropped/missed calls are listed as "call back" on the dashboard. |
+| Decision                                                           | Why                                                                                                                                                                                                                                                               |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **No prices on the call**, ever — one fixed line from `pricing.md` | Nikhil asked for per-sq-ft quotes; `pricing.md` forbids any number. This is the cut. A `pricing_leak` check runs on every call and shows on the dashboard.                                                                                                        |
+| **Rubric in code, not in the LLM** (`server/src/rules/`)           | Deterministic and explainable: each lead shows pass/fail/unclear per criterion with the reason. Tested against the September enquiries (`npm test`): it reaches the studio's own decision on all 19 qualifiable phone calls, plus 7 WhatsApp/web-form edge cases. |
+| **The agent never asks about budget**                              | `qualified.md`: "Don't probe." A volunteered budget is checked internally against the lowest pricing tier (×0.6); only a clear miss (T10: ₹1–1.5 L for kitchen + bedroom) is flagged.                                                                             |
+| **Telegram for the handoff** (over email)                          | Designers are on site all day; the 1-hour, 4× conversion window needs a push notification, not an inbox. Buttons make Accept / Met / No-show a single tap, which is what makes attendance tracking possible at all. The calendar invite still goes by email.      |
+| **Booking happens after the call** (mid-call slot tools optional)  | Works with any Vaani plan and needs no low-latency public endpoint. The agent collects preferred days/times; the server books the earliest matching designer slot within seconds. Add the `/tools/*` cURL tools in Vaani to offer exact slots live.               |
+| **Own SQLite DB as source of truth; HubSpot is a one-way sync**    | The ops data Nikhil asked for (call cost, speed to designer, no-show reasons) doesn't fit HubSpot's free objects. HubSpot gets contacts and deals for the pipeline view.                                                                                          |
+| **Outbound callbacks parked**                                      | Scope is incoming calls. Dropped/missed calls are listed as "call back" on the dashboard.                                                                                                                                                                         |
 
 ## Run it locally
 
@@ -78,15 +107,15 @@ Then in Vaani → Settings → Webhooks add `https://<prod-url>/webhooks/vaani?k
 
 ## Integrations
 
-| | Needed for | Set in `.env` |
-|---|---|---|
-| Vaani | the voice agent + call webhooks | `VAANI_API_KEY`, `VAANI_AGENT_ID` (auto), `WEBHOOK_SECRET` |
-| Turso | hosted database | `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` (Vercel Marketplace) |
-| Telegram | designer handoff, check-ins, escalations | `TELEGRAM_BOT_TOKEN` (@BotFather), `TELEGRAM_WEBHOOK_SECRET` (auto) |
-| Google Calendar | real availability + invites | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` (`npm run google:auth`) |
-| HubSpot | founder pipeline view | `HUBSPOT_TOKEN` (private app: contacts + deals read/write) |
-| Gemini (Flash, free tier) | structured consultation summaries from designer notes | `GEMINI_API_KEY`, `GEMINI_MODEL` (optional, defaults to `gemini-3.8-flash`) |
-| — | cron | `CRON_SECRET` |
+|                           | Needed for                                            | Set in `.env`                                                                              |
+| ------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Vaani                     | the voice agent + call webhooks                       | `VAANI_API_KEY`, `VAANI_AGENT_ID` (auto), `WEBHOOK_SECRET`                                 |
+| Turso                     | hosted database                                       | `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` (Vercel Marketplace)                              |
+| Telegram                  | designer handoff, check-ins, escalations              | `TELEGRAM_BOT_TOKEN` (@BotFather), `TELEGRAM_WEBHOOK_SECRET` (auto)                        |
+| Google Calendar           | real availability + invites                           | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` (`npm run google:auth`) |
+| HubSpot                   | founder pipeline view                                 | `HUBSPOT_TOKEN` (private app: contacts + deals read/write)                                 |
+| Gemini (Flash, free tier) | structured consultation summaries from designer notes | `GEMINI_API_KEY`, `GEMINI_MODEL` (optional, defaults to `gemini-3.8-flash`)                |
+| —                         | cron                                                  | `CRON_SECRET`                                                                              |
 
 ## Layout
 
