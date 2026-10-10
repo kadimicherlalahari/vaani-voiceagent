@@ -1,21 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 
-const TOKEN_KEY = "aangan_pw";
-export const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) ?? ""; } catch { return ""; } };
-export const setToken = (t: string) => { try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch { /* private mode */ } };
-const auth = () => ({ Authorization: `Bearer ${getToken()}` });
-export class Unauthorized extends Error {}
-
 export async function apiGet<T>(path: string): Promise<T> {
-  const r = await fetch(`/api${path}`, { headers: auth() });
-  if (r.status === 401) { window.dispatchEvent(new Event("aangan:logout")); throw new Unauthorized("login required"); }
+  const r = await fetch(`/api${path}`);
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
   return r.json();
 }
 
 export async function apiPost<T = unknown>(path: string, body: unknown, method = "POST"): Promise<T> {
-  const r = await fetch(`/api${path}`, { method, headers: { "Content-Type": "application/json", ...auth() }, body: JSON.stringify(body) });
-  if (r.status === 401) { window.dispatchEvent(new Event("aangan:logout")); throw new Unauthorized("login required"); }
+  const r = await fetch(`/api${path}`, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
   return r.json();
 }

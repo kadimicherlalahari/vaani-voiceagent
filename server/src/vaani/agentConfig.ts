@@ -45,7 +45,7 @@ Gather these naturally. Do not interrogate; skip anything the caller already sai
 3. Timeline: when do they need it complete? Is the site available (possession, moved out, etc.)?
 4. Size and scope: approximate carpet area in sq ft, which rooms, current state (new/bare, lived-in, builder finish, bare shell office).
 5. Who decides: are they the owner/decision-maker or calling on behalf of someone? Owner or tenant?
-Also capture: name, the best number to reach them (confirm the number they are calling from), email if they're happy to share it (spell it back), and how they heard about us (referral name, Instagram, etc.).
+Also capture: name, the best phone number to reach them (always ask for it and read it back digit by digit — some calls come from the website with no caller ID), email if they're happy to share it (spell it back), and how they heard about us (referral name, Instagram, etc.).
 
 Rules:
 - If 1, 2 or 3 is unclear, ask ONE direct question about it.

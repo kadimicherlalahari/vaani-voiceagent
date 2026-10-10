@@ -6,7 +6,10 @@ import { all, get, insertRow, logActivity, updateRow } from "../db.js";
 import { handoffLead, recordMeetingNotes, recordMeetingOutcome, recordReason, resolveEscalation, setLeadStage } from "../pipeline.js";
 import { studioHeadChat } from "../notify/telegram.js";
 import { toolDocs } from "../tools/routes.js";
-import { randomCode } from "../util.js";
+import { randomCode, isOfficeHours } from "../util.js";
+import { vaaniApi } from "../vaani/client.js";
+import { handleVaaniEvent } from "../vaani/webhook.js";
+import { waitUntil } from "@vercel/functions";
 
 export const api = Router();
 
@@ -269,4 +272,41 @@ api.get("/settings", async (_req, res) => {
     lastTick: (await get("SELECT v FROM kv WHERE k = 'last_tick'"))?.v ?? null,
     database: process.env.TURSO_DATABASE_URL ? "Turso" : "local file",
   });
+});
+
+// ---------- "Talk to the agent" in the browser (demo without a phone number) ----------
+
+api.post("/talk", async (_req, res) => {
+  if (!config.vaani.agentId) return res.status(400).json({ error: "Vaani agent not configured" });
+  try {
+    const session = await vaaniApi.createWebSession(config.vaani.agentId, { source: "browser" });
+    const lk = await vaaniApi.connectWebSession(session.session_token);
+    const now = new Date();
+    await insertRow("calls", { id: lk.room_name, direction: "inbound", status: "in_progress", started_at: now.toISOString(), after_hours: !isOfficeHours(now), source: "browser" });
+    res.json({ token: lk.lk_token, url: lk.lk_url, room: lk.room_name, session: session.session_token });
+  } catch (e) {
+    res.status(502).json({ error: (e as Error).message });
+  }
+});
+
+/** Browser session ended. If Vaani's post-processing webhook doesn't arrive, fetch the details ourselves. */
+api.post("/talk/:room/end", async (req, res) => {
+  const room = req.params.room;
+  const session = typeof req.body?.session === "string" ? req.body.session : null;
+  res.json({ ok: true });
+  const job = (async () => {
+    // End the Vaani session now, otherwise it waits out its reconnect grace period before post-processing.
+    if (session) await vaaniApi.endWebSession(session).catch((e) => console.error("end session:", e));
+    for (let i = 0; i < 18; i++) {
+      await new Promise((r) => setTimeout(r, 10_000));
+      const call = await get("SELECT processed_at FROM calls WHERE id = ?", room);
+      if (call?.processed_at) return; // webhook already handled it
+      const d: any = await vaaniApi.callDetails(room).catch(() => null);
+      if (d && typeof d.entity === "object" && d.transcription && !/not available/i.test(d.transcription)) {
+        await handleVaaniEvent({ event: "call_postprocessing", call_id: room, data: { call_id: room, summary: d.summary, entities: d.entity, transcript: d.transcription, dispositions: {} } });
+        return;
+      }
+    }
+  })().catch((e) => console.error("talk fallback:", e));
+  try { waitUntil(job); } catch { /* local */ }
 });

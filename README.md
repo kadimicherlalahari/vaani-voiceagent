@@ -58,7 +58,7 @@ The studio head links their Telegram chat with `/start STUDIOHEAD`. An existing-
 npm install            # workspaces: server + web
 npm run build          # build the dashboard
 npm run seed           # placeholder designers + September baseline
-npm start              # http://localhost:4000 (password: DASHBOARD_PASSWORD in .env)
+npm start              # http://localhost:4000
 npm test               # rubric tests (September transcripts)
 npm run simulate       # replay 6 realistic Vaani webhooks
 npm run check          # verify every integration with a real API call
@@ -86,7 +86,7 @@ Then in Vaani → Settings → Webhooks add `https://<prod-url>/webhooks/vaani?k
 | Google Calendar | real availability + invites | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` (`npm run google:auth`) |
 | HubSpot | founder pipeline view | `HUBSPOT_TOKEN` (private app: contacts + deals read/write) |
 | Claude | structured consultation summaries from designer notes | `ANTHROPIC_API_KEY` |
-| — | dashboard login, cron | `DASHBOARD_PASSWORD`, `CRON_SECRET` |
+| — | cron | `CRON_SECRET` |
 
 ## Layout
 

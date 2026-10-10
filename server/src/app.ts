@@ -48,11 +48,7 @@ app.all("/cron/tick", async (req, res) => {
 });
 
 app.use("/tools", requireKey, toolsRouter);
-const requireLogin: express.RequestHandler = (req, res, next) => {
-  if (!config.dashboardPassword || req.get("authorization") === `Bearer ${config.dashboardPassword}`) return next();
-  res.status(401).json({ error: "login required" });
-};
-app.use("/api", requireLogin, (_req, _res, next) => { background(tickIfDue(), "tick"); next(); }, api);
+app.use("/api", (_req, _res, next) => { background(tickIfDue(), "tick"); next(); }, api);
 app.get("/health", (_req, res) => res.json({ ok: true, integrations: integrations() }));
 
 export default app;

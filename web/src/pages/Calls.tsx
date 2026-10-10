@@ -44,7 +44,7 @@ export default function Calls() {
                 <tr key={c.id} className="cursor-pointer hover:bg-surface" onClick={() => setOpen(c.id)}>
                   <td className="td whitespace-nowrap">
                     <div>{when(c.started_at)}</div>
-                    <div className="flex gap-1 text-xs text-ink-3">{c.after_hours ? "after hours" : "office hours"}{c.source !== "vaani" && <span>· {c.source}</span>}</div>
+                    <div className="flex gap-1 text-xs text-ink-3">{c.after_hours ? "after hours" : "office hours"}{c.source !== "vaani" && <span>· {c.source === "browser" ? "browser call" : c.source}</span>}</div>
                   </td>
                   <td className="td"><div className="font-medium">{c.lead_name ?? "—"}</div><div className="tnum text-xs text-ink-3">{c.from_number ?? "unknown number"}</div></td>
                   <td className="td"><Pill tone={st.tone}>{st.label}</Pill></td>

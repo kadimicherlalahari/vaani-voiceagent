@@ -8,7 +8,6 @@ export const config = {
   webhookSecret: env("WEBHOOK_SECRET"),
   cronSecret: env("CRON_SECRET"),
   // Required to read the dashboard API (it contains callers' names and numbers). Blank = open (local dev only).
-  dashboardPassword: env("DASHBOARD_PASSWORD"),
   dbPath: env("DB_PATH", new URL("../aangan.db", import.meta.url).pathname),
   timezone: "Asia/Kolkata",
 

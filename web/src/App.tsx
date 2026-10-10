@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
-import { getToken, setToken, useApi } from "./api";
+import { useApi } from "./api";
 import Overview from "./pages/Overview";
 import Calls from "./pages/Calls";
 import Leads from "./pages/Leads";
@@ -8,6 +8,7 @@ import LeadDetail from "./pages/LeadDetail";
 import Escalations from "./pages/Escalations";
 import Designers from "./pages/Designers";
 import Setup from "./pages/Setup";
+import Talk from "./pages/Talk";
 
 type Filters = { days: number; seed: boolean; qs: string; setDays: (d: number) => void; setSeed: (s: boolean) => void };
 const FiltersCtx = createContext<Filters>(null!);
@@ -17,35 +18,7 @@ const load = (k: string, d: string) => { try { return localStorage.getItem(k) ??
 const save = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } };
 
 export default function App() {
-  const [locked, setLocked] = useState(false);
-  useEffect(() => {
-    const onLogout = () => setLocked(true);
-    window.addEventListener("aangan:logout", onLogout);
-    return () => window.removeEventListener("aangan:logout", onLogout);
-  }, []);
-  if (locked) return <Login onDone={() => setLocked(false)} />;
   return <Shell />;
-}
-
-function Login({ onDone }: { onDone: () => void }) {
-  const [pw, setPw] = useState("");
-  const [err, setErr] = useState(false);
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const r = await fetch("/api/settings", { headers: { Authorization: `Bearer ${pw}` } });
-    if (r.ok) { setToken(pw); onDone(); } else setErr(true);
-  };
-  return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <form onSubmit={submit} className="card w-full max-w-sm space-y-3 p-6">
-        <div><span className="font-display text-2xl text-accent">Aangan</span> <span className="text-ink-2">Enquiry Desk</span></div>
-        <p className="text-sm text-ink-2">Studio staff only — this dashboard holds callers' details.</p>
-        <input className="input w-full" type="password" autoFocus placeholder="Dashboard password" value={pw} onChange={(e) => { setPw(e.target.value); setErr(false); }} />
-        {err && <p className="text-sm text-critical">Wrong password.</p>}
-        <button className="btn-primary w-full justify-center" disabled={!pw}>Sign in</button>
-      </form>
-    </div>
-  );
 }
 
 function Shell() {
@@ -58,7 +31,7 @@ function Shell() {
   const openEsc = esc?.filter((e) => e.status !== "resolved").length ?? 0;
 
   const nav = [
-    ["/", "Overview"], ["/calls", "Calls"], ["/leads", "Leads"], ["/escalations", "Escalations"], ["/designers", "Designers"], ["/setup", "Setup"],
+    ["/", "Overview"], ["/talk", "🎙 Talk to agent"], ["/calls", "Calls"], ["/leads", "Leads"], ["/escalations", "Escalations"], ["/designers", "Designers"], ["/setup", "Setup"],
   ];
   return (
     <FiltersCtx.Provider value={{ days, seed, qs, setDays, setSeed }}>
@@ -79,7 +52,6 @@ function Shell() {
               ))}
             </nav>
             <div className="flex items-center gap-3 text-sm">
-              {getToken() && <button className="text-ink-3 hover:text-ink" onClick={() => { setToken(""); location.reload(); }}>Sign out</button>}
               <select className="input !py-1" value={days} onChange={(e) => setDays(Number(e.target.value))} aria-label="Date range">
                 <option value={1}>Today</option>
                 <option value={7}>Last 7 days</option>
@@ -102,6 +74,7 @@ function Shell() {
             <Route path="/escalations" element={<Escalations />} />
             <Route path="/designers" element={<Designers />} />
             <Route path="/setup" element={<Setup />} />
+            <Route path="/talk" element={<Talk />} />
           </Routes>
         </main>
       </div>
