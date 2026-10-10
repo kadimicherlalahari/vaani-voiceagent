@@ -56,7 +56,7 @@ const scenarios: Record<string, { summary: string; transcript: string; entities:
 };
 
 async function post(body: object) {
-  const url = `http://localhost:${config.port}/webhooks/vaani${config.webhookSecret ? `?key=${config.webhookSecret}` : ""}`;
+  const url = `${process.env.SIM_BASE ?? `http://localhost:${config.port}`}/webhooks/vaani${config.webhookSecret ? `?key=${config.webhookSecret}` : ""}`;
   const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
 }

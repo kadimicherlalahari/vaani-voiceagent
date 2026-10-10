@@ -34,6 +34,12 @@ Studio number ──(no answer after ~30 s / busy / after hours)──▶ Vaani 
 
 Every step is written to the lead's timeline, shown on the dashboard, and (optionally) synced to HubSpot.
 
+## See it working
+
+The studio head links their Telegram chat with `/start STUDIOHEAD`. An existing-client complaint (T09, replayed with `npm run simulate`) then arrives as an escalation with the 15-minute callback deadline and one-tap **I'm calling now** / **Resolved** buttons:
+
+![Telegram escalation for an existing-client complaint](public/photos/image.png)
+
 ## Decisions (and why)
 
 | Decision | Why |
